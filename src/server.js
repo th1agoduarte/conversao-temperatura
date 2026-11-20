@@ -59,6 +59,17 @@ app.post('/', (req, res) => {
     res.render('index', {valorConvertido: resultado, "maquina": os.hostname()});
  });
 
-app.listen(8080, () => {
-    console.log("Servidor rodando na porta 8080");
+const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
+
+const server = app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+// Encerramento gracioso: o Kubernetes envia SIGTERM ao parar o pod
+const shutdown = (signal) => {
+    console.log(`${signal} recebido, encerrando servidor...`);
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(1), 10000).unref();
+};
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
